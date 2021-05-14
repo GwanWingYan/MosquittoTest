@@ -1,4 +1,4 @@
-package com.megrx.java;
+package com.megrx.java.packet;
 
 public class ConnectPacketConfig {
 
@@ -14,4 +14,6 @@ public class ConnectPacketConfig {
     public String willMessage = "";
     public String username = "";
     public String password = "";
+
+    public boolean wrongName = false;
 }

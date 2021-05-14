@@ -1,4 +1,6 @@
-package com.megrx.java;
+package com.megrx.java.packet;
+
+import com.megrx.java.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -21,7 +23,6 @@ public class ConnectPacket {
             return result;
 
         int remainingLength;
-        byte b1 = 0;
         List<Byte> fixedHeader;
         List<Byte> variableHeader;
         List<Byte> payload;
@@ -37,8 +38,8 @@ public class ConnectPacket {
         remainingLength = variableHeader.size() + payload.size();
 
         // fixed header
-        b1 = Util.setBit(b1, 4);
-        fixedHeader = fixedHeader(b1, remainingLength);
+
+        fixedHeader = fixedHeader(remainingLength);
 
         // write each array to output stream
         for (byte b : fixedHeader)      output.write(b);
@@ -52,13 +53,14 @@ public class ConnectPacket {
 
     /**
      * make a fixed header
-     * @param b1 the first byte of fixed header
      * @param remainingLength the Remaining Length field
      * @return the fixed header(byte[])
      */
-    public static List<Byte> fixedHeader(byte b1, int remainingLength) {
+    public List<Byte> fixedHeader(int remainingLength) {
         List<Byte> result = new ArrayList<>();
 
+        byte b1 = 0;
+        b1 = Util.setBit(b1, 4);
         result.add(b1);
 
         List<Byte> lengthByteList = Util.encodeLength(remainingLength);
@@ -81,10 +83,17 @@ public class ConnectPacket {
         lsb = 4;
         result.add(Util.intToUnsignedByte(msb));
         result.add(Util.intToUnsignedByte(lsb));
-        result.add((byte)'M');
-        result.add((byte)'Q');
-        result.add((byte)'T');
-        result.add((byte)'T');
+        if (!config.wrongName) {
+            result.add((byte)'M');
+            result.add((byte)'Q');
+            result.add((byte)'T');
+            result.add((byte)'T');
+        } else {
+            result.add((byte)'T');
+            result.add((byte)'T');
+            result.add((byte)'Q');
+            result.add((byte)'M');
+        }
 
         // Protocol Level
         result.add((byte)4);
@@ -142,5 +151,29 @@ public class ConnectPacket {
         }
 
         return result;
+    }
+
+    /**
+     * create a defaultConnectPacket for later usage
+     * @return a connect packet
+     */
+    public static ConnectPacket getDefaultConnectPacket() {
+        // create configuration instance
+        ConnectPacketConfig config = new ConnectPacketConfig();
+        // config here
+        config.usernameFlag = false;
+        config.passwordFlag = false;
+        config.willRetain = false;
+        config.willQOS = 1;
+        config.willFlag = true;
+        config.cleanSession = true;
+        config.keepAlive = 60;
+        config.clientID = "gwan";
+        config.willTopic = "test";
+        config.willMessage = "will msg";
+        config.username = "un";
+        config.password = "pw";
+
+        return new ConnectPacket(config);
     }
 }
